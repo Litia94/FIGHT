@@ -1,0 +1,272 @@
+（fight）
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Ortik Battle</title>
+<style>
+body {
+  background: black;
+  color: white;
+  font-family: 'Determination', monospace;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+#game {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  background: black;
+}
+#startScreen {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+#startButton {
+  font-size: 30px;
+  padding: 20px;
+  border: 3px solid white;
+  cursor: pointer;
+}
+#battleField {
+  display: none;
+  position: absolute;
+  width: 100%; height: 100%;
+  background: white;
+  color: black;
+}
+#enemySprite {
+  width: 260px;
+  position: absolute;
+  top: 40px;
+  left: calc(50% - 130px);
+}
+#dialogBox {
+  position: absolute;
+  bottom: 160px;
+  left: 50%; transform: translateX(-50%);
+  width: 90%; height: 120px;
+  border: 4px solid black;
+  background: white;
+  color: black;
+  padding: 10px;
+  font-size: 22px;
+}
+#menuBox {
+  position: absolute;
+  bottom: 20px;
+  left: 50%; transform: translateX(-50%);
+  width: 90%; height: 120px;
+  border: 4px solid black;
+  background: white;
+  color: black;
+  padding: 10px;
+  font-size: 22px;
+}
+.menuItem { cursor: pointer; }
+.redSoul {
+  width: 20px; height: 20px;
+  background: red;
+  position: absolute;
+  border-radius: 4px;
+}
+.knife {
+  width: 20px; height: 60px;
+  background: red;
+  position: absolute;
+}
+#hpBar {
+  position: absolute;
+  left: 20px;
+  bottom: 150px;
+  font-size: 22px;
+}
+</style>
+</head>
+<body>
+<div id="game">
+  <!-- START画面 -->
+  <div id="startScreen">
+    <div id="startButton">START</div>
+  </div>
+
+  <!-- 戦闘画面 -->
+  <div id="battleField">
+    <img id="enemySprite" src="1762726537303.jpg" />
+
+    <div id="hpBar">HP: <span id="hpText">92</span> / 92</div>
+
+    <div id="dialogBox">＊...</div>
+
+    <div id="menuBox">
+      <span class="menuItem" onclick="selectCommand('fight')">FIGHT</span>　
+      <span class="menuItem" onclick="selectCommand('act')">ACT</span>　
+      <span class="menuItem" onclick="selectCommand('item')">ITEM</span>　
+      <span class="menuItem" onclick="selectCommand('mercy')">MERCY</span>
+    </div>
+
+    <div id="soul" class="redSoul"></div>
+  </div>
+
+  <audio id="battleMusic" src="Screen_Recording_20251116_105355_YouTubeMusic.mp4" loop></audio>
+  <audio id="selectSound" src="select.mp3"></audio>
+</div>
+
+<script>
+let hp = 92;
+let turn = 1;
+let soul = document.getElementById("soul");
+let dialog = document.getElementById("dialogBox");
+let music = document.getElementById("battleMusic");
+let selectSound = document.getElementById("selectSound");
+let battlefield = document.getElementById("battleField");
+
+let soulX = 300;
+let soulY = 350;
+let keys = {};
+Document.onkeydown = e => keys[e.key] = true;
+document.onkeyup = e => keys[e.key] = false;
+
+function startGame(){
+  document.getElementById("startScreen").style.display = "none";
+  battlefield.style.display = "block";
+  music.play();
+  soul.style.left = soulX + "px";
+  soul.style.top = soulY + "px";
+}
+document.getElementById("startButton").onclick = startGame;
+
+// セリフ（赤文字）
+const enemyLines = {
+  1:["＊....Hmm, that's strange. I thought I had completely erased the timeline of this world.",
+     "＊....Well, whatever. If it doesn't work no matter how many times I try... I'll make you suffer until you die."],
+  2:["＊Actually, I had an abnormality towards you. You have the power of determination, right?",
+     "＊That was a power I had too. But I can't use it now。"],
+  3:["＊However, for some reason, it gradually became more interesting. ... I have only been watching as an observer until now。",
+     "＊While narrating about you, right?。"],
+  4:["＊I was surprised to see you helped everyone at first.",
+     "＊Because I knew what kind of trash humans are."],
+  5:["＊You got along with everyone... but why did you kill them all in the next world?"],
+  6:["＊I can no longer understand your emotions. Why do you keep looping like that? Don't you get bored? Don't you realize it's pointless?"],
+  7:["＊At least I am with you... You cannot defeat me."],
+  8:["＊Why can't I defeat it, you ask? That's obvious, isn't it?",
+     "＊...I t ' s  b e c a u s e  I  a m  i n t e g r a t e d w i t h  y o u . M y s o u l  i s ."],
+  9:["＊Are you still alive? You're persistent... How long do you plan to keep fighting?"],
+ 10:[""],
+ 11:["＊If we continue like this, we will have to use special techniques... a special attack.",
+     "＊It will be activated after this attack."],
+ 12:["＊If you hate it, it's better to die now."],
+ 13:["＊Well then, shall we settle this? I will completely erase this world."]
+};
+
+// 一文字ずつ表示\async function typeLine(text){
+  dialog.innerHTML = "";
+  for(let i=0;i<text.length;i++){
+    dialog.innerHTML += `<span style='color:red'>${text[i]}</span>`;
+    await new Promise(r=>setTimeout(r,35));
+  }
+  await new Promise(r=>setTimeout(r,400));
+}
+
+// コマンド選択unction selectCommand(cmd){
+  selectSound.play();
+  if(cmd === "fight"){ attackEnemy(); }
+  if(cmd === "act"){ actMenu(); }
+  if(cmd === "item"){ itemMenu(); }
+}
+
+function attackEnemy(){
+  dialog.innerHTML = "＊NOT DAMAGE";
+  setTimeout(()=> enemyAttack(turn), 800);
+}
+
+function actMenu(){
+  dialog.innerHTML = "＊ぶんせき : Ortik ATK 9999 DF 9999 ＊...彼女はあまり周りの雰囲気に好ましくない。";
+}
+
+function itemMenu(){
+  dialog.innerHTML = "＊ITEM : パイ / ガム / ポテト / ティー";
+}
+
+// ナイフヒット時
+function hit(){
+  hp = 0;
+  document.getElementById("hpText").innerHTML = hp;
+  dialog.innerHTML = "＊HP 0  YOU DIED";
+  setTimeout(()=> freezeScreen(),1000);
+}
+
+function freezeScreen(){
+  battlefield.style.filter = "grayscale(100%)";
+  battlefield.style.pointerEvents = "none";
+}
+
+// 移動処理\setInterval(()=>{
+  if(keys["ArrowLeft"]) soulX -= 4;
+  if(keys["ArrowRight"]) soulX += 4;
+  if(keys["ArrowUp"]) soulY -= 4;
+  if(keys["ArrowDown"]) soulY += 4;
+  soul.style.left = soulX + "px";
+  soul.style.top = soulY + "px";
+},16);
+
+// ナイフ生成unction spawnKnife(x,y,vx,vy){
+  let k = document.createElement("div");
+  k.className = "knife";
+  k.style.left = x+"px";
+  k.style.top = y+"px";
+  battlefield.appendChild(k);
+
+  let interval = setInterval(()=>{
+    x += vx; y += vy;
+    k.style.left = x+"px";
+    k.style.top = y+"px";
+
+    let sx = soulX, sy = soulY;
+    if(x < sx+20 && x+20 > sx && y < sy+20 && y+60 > sy){ hit(); }
+
+  },16);
+
+  setTimeout(()=>{ k.remove(); clearInterval(interval); },3000);
+}
+
+// ターン攻撃
+async function enemyAttack(t){
+  // セリフ
+  for(const line of enemyLines[t]){
+    await typeLine(line);
+  }
+
+  // 攻撃
+  if(t === 1){
+    for(let i=0;i<14;i++) spawnKnife(Math.random()*600, -50, 0, 7);
+  }
+  if(t === 2){
+    for(let a=0;a<360;a+=20){
+      let rad=a*Math.PI/180;
+      spawnKnife(300+Math.cos(rad)*100, 300+Math.sin(rad)*100, -Math.cos(rad)*6, -Math.sin(rad)*6);
+    }
+  }
+  if(t >= 3 && t <= 12){
+    for(let i=0;i<20;i++){
+      spawnKnife(Math.random()*600, 0, (Math.random()-0.5)*6, 6);
+    }
+  }
+  if(t === 13){
+    for(let i=0;i<40;i++){
+      spawnKnife(Math.random()*600, 0, (Math.random()-0.5)*7, 8);
+    }
+    setTimeout(freezeScreen,3000);
+  }
+
+  turn++;
+}
+</script>
+</body>
+</html>
